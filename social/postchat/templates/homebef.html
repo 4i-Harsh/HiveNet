@@ -3,6 +3,7 @@
 <head>
     <title>Welcome to HiveNet</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --neon-purple: #b026ff;
@@ -17,20 +18,43 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
         }
 
         .welcome-card {
-            background: rgba(26, 0, 51, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--neon-purple);
-            box-shadow: 0 0 30px var(--neon-purple);
-            padding: 2rem;
+            background: rgba(26, 0, 51, 0.6);
+            backdrop-filter: blur(15px);
+            border: 2px solid var(--neon-purple);
+            box-shadow: 0 0 40px rgba(176, 38, 255, 0.3);
+            padding: 3rem;
             text-align: center;
-            border-radius: 15px;
+            border-radius: 25px;
+            transition: transform 0.3s ease;
+        }
+
+        .welcome-card:hover {
+            transform: translateY(-5px);
         }
 
         .title {
-            font-size: 3.5rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 700;
             margin-bottom: 1.5rem;
             background: linear-gradient(45deg, #fff, var(--glow-purple), #fff);
             -webkit-background-clip: text;
@@ -38,6 +62,8 @@
             color: transparent;
             animation: gradientText 3s ease infinite;
             background-size: 200% 200%;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(176, 38, 255, 0.5);
         }
 
         @keyframes gradientText {
@@ -46,43 +72,75 @@
             100% { background-position: 0% 50%; }
         }
 
+        .subtitle {
+            font-size: 1.2rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin-bottom: 2rem;
+            color: #e0e0e0;
+        }
+
         .btn-custom {
             background: var(--neon-purple);
             color: white;
             border: none;
-            padding: 10px 30px;
+            padding: 12px 35px;
             margin: 10px;
-            border-radius: 25px;
+            border-radius: 30px;
             transition: all 0.3s ease;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
         }
 
         .btn-custom:hover {
             background: var(--glow-purple);
             transform: scale(1.05);
             color: white;
-            box-shadow: 0 0 20px var(--neon-purple);
+            box-shadow: 0 0 30px var(--neon-purple);
         }
 
         .modal-content {
             background: rgba(26, 0, 51, 0.95);
-            border: 1px solid var(--neon-purple);
+            border: 2px solid var(--neon-purple);
             color: white;
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
         }
 
         .modal-header {
-            border-bottom: 1px solid var(--neon-purple);
+            border-bottom: 1px solid rgba(176, 38, 255, 0.3);
+            padding: 1.5rem;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
         }
 
         .modal-footer {
-            border-top: 1px solid var(--neon-purple);
+            border-top: 1px solid rgba(176, 38, 255, 0.3);
+            padding: 1.5rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .btn-close-white {
+            filter: brightness(0) invert(1);
         }
     </style>
 </head>
 <body>
+    <div id="particles-js"></div>
+    
     <div class="container">
         <div class="welcome-card">
             <h1 class="title">Welcome to HiveNet</h1>
-            <p class="mb-4">Connect, Share, and Explore with the Community</p>
+            <p class="subtitle">Connect, Share, and Explore with the Community</p>
             <button class="btn btn-custom" data-bs-toggle="modal" data-bs-target="#authModal">
                 Get Started
             </button>
@@ -109,7 +167,69 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script>
+        particlesJS('particles-js',
+        {
+            "particles": {
+                "number": {
+                    "value": 80,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": "#b026ff"
+                },
+                "shape": {
+                    "type": "circle"
+                },
+                "opacity": {
+                    "value": 0.5,
+                    "random": false
+                },
+                "size": {
+                    "value": 3,
+                    "random": true
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#b026ff",
+                    "opacity": 0.4,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 2,
+                    "direction": "none",
+                    "random": false,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "repulse"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                }
+            },
+            "retina_detect": true
+        });
+    </script>
 </body>
 </html> 
