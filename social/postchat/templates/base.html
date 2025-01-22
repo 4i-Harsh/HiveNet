@@ -252,10 +252,10 @@
                                             <span>{{ request.from_user.username }} sent you a friend request</span>
                                         </div>
                                         <div class="btn-group">
-                                            <button onclick="handleFriendRequest({{ request.id }}, 'accept')" class="btn btn-sm btn-success">
+                                            <button onclick="handleFriendRequest('{{ request.id }}', 'accept', '{{ csrf_token }}')" class="btn btn-sm btn-success">
                                                 <i class="fas fa-check"></i>
                                             </button>
-                                            <button onclick="handleFriendRequest({{ request.id }}, 'reject')" class="btn btn-sm btn-danger">
+                                            <button onclick="handleFriendRequest('{{ request.id }}', 'reject', '{{ csrf_token }}')" class="btn btn-sm btn-danger">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
@@ -347,14 +347,14 @@
         }
     });
 
-    function handleFriendRequest(requestId, action) {
+    function handleFriendRequest(requestId, action, csrfToken) {
         const formData = new FormData();
         formData.append('action', action);
         
         fetch(`/friend-request/handle/${requestId}/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
+                'X-CSRFToken': csrfToken,
             },
             body: formData,
             credentials: 'same-origin'

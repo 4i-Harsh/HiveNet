@@ -5,7 +5,54 @@
 {% block content %}
 <style>
     .friends-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .add-friends-section {
+        background: rgba(26, 0, 51, 0.8);
+        border: 1px solid var(--neon-purple);
+        border-radius: 15px;
         padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 0 20px var(--neon-purple);
+    }
+
+    .user-dropdown {
+        background: rgba(26, 0, 51, 0.9);
+        border: 1px solid var(--neon-purple);
+        color: white;
+        border-radius: 10px;
+        padding: 10px;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .user-dropdown option {
+        background: rgba(26, 0, 51, 0.9);
+        color: white;
+        padding: 10px;
+    }
+
+    .add-friend-btn {
+        background: var(--neon-purple);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .add-friend-btn:hover {
+        background: var(--glow-purple);
+        transform: scale(1.05);
+        box-shadow: 0 0 15px var(--neon-purple);
+    }
+
+    .friends-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
     }
 
     .friend-card {
@@ -13,7 +60,7 @@
         border: 1px solid var(--neon-purple);
         border-radius: 15px;
         padding: 20px;
-        margin-bottom: 20px;
+        text-align: center;
         transition: all 0.3s ease;
     }
 
@@ -23,64 +70,111 @@
     }
 
     .friend-pic {
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
         border-radius: 50%;
+        margin-bottom: 10px;
         border: 2px solid var(--neon-purple);
-        object-fit: cover;
-    }
-
-    .friend-info {
-        flex: 1;
-    }
-
-    .friend-username {
-        color: var(--glow-purple);
-        text-decoration: none;
-        font-size: 1.2rem;
-    }
-
-    .friend-username:hover {
-        color: var(--neon-purple);
-    }
-
-    .no-friends {
-        text-align: center;
-        padding: 50px;
-        color: #666;
     }
 </style>
 
-<div class="container friends-container">
+<div class="friends-container">
+    <div class="add-friends-section">
+        <h4 class="mb-3">Add New Friends</h4>
+        <select class="user-dropdown" id="userSelect">
+            <option value="">Select a user to add as friend</option>
+            {% for user in available_users %}
+                <option value="{{ user.id }}">{{ user.username }}</option>
+            {% endfor %}
+        </select>
+        <button class="add-friend-btn" onclick="sendFriendRequest()">
+            <i class="fas fa-user-plus me-2"></i>Send Friend Request
+        </button>
+    </div>
+
     <h4 class="mb-4">My Friends</h4>
-    
     {% if friends %}
-        <div class="row">
+        <div class="friends-list">
             {% for friend in friends %}
-            <div class="col-md-6 mb-4">
-                <div class="friend-card">
-                    <div class="d-flex align-items-center">
-                        <img src="{{ friend.profile.profile_pic.url }}" class="friend-pic me-3">
-                        <div class="friend-info">
-                            <a href="#" class="friend-username mb-1 d-block">{{ friend.username }}</a>
-                            <p class="text-muted mb-2">
-                                {% if friend.profile.location %}
-                                <i class="fas fa-map-marker-alt me-2"></i>{{ friend.profile.location }}
-                                {% endif %}
-                            </p>
-                            <p class="bio-text">{{ friend.profile.bio|truncatechars:100 }}</p>
-                        </div>
+                <div class="friend-card" onclick="confirmChat('{{ friend.username }}', {{ friend.id }})">
+                    <img src="{{ friend.profile.profile_pic.url }}" class="friend-pic">
+                    <h5>{{ friend.username }}</h5>
+                    {% if friend.profile.location %}
+                        <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>{{ friend.profile.location }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Chat Confirmation Modal -->
+        <div class="modal fade" id="chatConfirmModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Start Chat</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Do you want to chat with <span id="friendName"></span>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                        <button type="button" class="btn btn-primary" id="startChatBtn">Yes</button>
                     </div>
                 </div>
             </div>
-            {% endfor %}
         </div>
+
+        <script>
+        function confirmChat(friendName, friendId) {
+            document.getElementById('friendName').textContent = friendName;
+            const modal = new bootstrap.Modal(document.getElementById('chatConfirmModal'));
+            modal.show();
+
+            document.getElementById('startChatBtn').onclick = function() {
+                window.location.href = `/chat/${friendId}/`;
+            }
+        }
+        </script>
     {% else %}
-        <div class="no-friends">
+        <div class="text-center">
             <i class="fas fa-user-friends fa-3x mb-3"></i>
             <h5>No friends yet</h5>
-            <p>Start connecting with other users to build your network!</p>
+            <p>Start adding friends from the dropdown above!</p>
         </div>
     {% endif %}
 </div>
+
+<script>
+function sendFriendRequest() {
+    const select = document.getElementById('userSelect');
+    const userId = select.value;
+    
+    if (!userId) {
+        alert('Please select a user');
+        return;
+    }
+
+    fetch(`/friend-request/send/${userId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Friend request sent successfully!');
+            select.value = ''; // Reset dropdown
+            // Remove the selected user from the dropdown
+            select.querySelector(`option[value="${userId}"]`).remove();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error sending friend request');
+    });
+}
+</script>
 {% endblock %} 

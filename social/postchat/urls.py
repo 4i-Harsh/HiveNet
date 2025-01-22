@@ -13,4 +13,5 @@ urlpatterns = [
     path('friend-request/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
     path('friend-request/handle/<int:request_id>/', views.handle_friend_request, name='handle_friend_request'),
     path('friends/', views.friends_view, name='friends'),
+    path('chat/<int:friend_id>/', views.chatroom_view, name='chatroom'),
 ] 

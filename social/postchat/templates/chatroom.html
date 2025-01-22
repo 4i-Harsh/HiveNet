@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat Room{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="chat-container">
+        <h3 class="mb-4">This is chatroom</h3>
+        <div class="participants-box">
+            <h5>Users in chat:</h5>
+            <ul>
+                <li>{{ request.user.username }}</li>
+                <li>{{ friend.username }}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chat-container {
+        background: rgba(26, 0, 51, 0.8);
+        border: 1px solid var(--neon-purple);
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem auto;
+        max-width: 800px;
+        box-shadow: 0 0 20px var(--neon-purple);
+    }
+
+    .participants-box {
+        background: rgba(26, 0, 51, 0.6);
+        border: 1px solid var(--neon-purple);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .participants-box ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .participants-box li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(176, 38, 255, 0.2);
+    }
+
+    .participants-box li:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %} 

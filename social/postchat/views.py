@@ -181,6 +181,39 @@ def friends_view(request):
         else:
             friends.append(fr.from_user)
     
+    # Get all users who are not friends and not the current user
+    # Also exclude users who already have pending friend requests
+    pending_requests = FriendRequest.objects.filter(
+        (Q(from_user=request.user) | Q(to_user=request.user)) &
+        Q(status='pending')
+    )
+    pending_users = [fr.from_user if fr.to_user == request.user else fr.to_user 
+                    for fr in pending_requests]
+    
+    available_users = User.objects.exclude(
+        Q(id=request.user.id) |
+        Q(id__in=[friend.id for friend in friends]) |
+        Q(id__in=[user.id for user in pending_users])
+    )
+    
     return render(request, 'friends.html', {
-        'friends': friends
+        'friends': friends,
+        'available_users': available_users
     })
+
+@login_required
+def chatroom_view(request, friend_id):
+    try:
+        friend = User.objects.get(id=friend_id)
+        # Verify that they are actually friends
+        if not FriendRequest.objects.filter(
+            (Q(from_user=request.user, to_user=friend) | Q(from_user=friend, to_user=request.user)),
+            status='accepted'
+        ).exists():
+            return redirect('friends')
+            
+        return render(request, 'chatroom.html', {
+            'friend': friend
+        })
+    except User.DoesNotExist:
+        return redirect('friends')
