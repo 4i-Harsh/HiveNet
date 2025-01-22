@@ -164,3 +164,23 @@ def get_friend_requests(request):
         'friend_requests': [],
         'has_notifications': False
     }
+
+@login_required
+def friends_view(request):
+    # Get all accepted friend requests where the user is either the sender or receiver
+    accepted_requests = FriendRequest.objects.filter(
+        (Q(from_user=request.user) | Q(to_user=request.user)) &
+        Q(status='accepted')
+    )
+    
+    # Get the friend users from the requests
+    friends = []
+    for fr in accepted_requests:
+        if fr.from_user == request.user:
+            friends.append(fr.to_user)
+        else:
+            friends.append(fr.from_user)
+    
+    return render(request, 'friends.html', {
+        'friends': friends
+    })
