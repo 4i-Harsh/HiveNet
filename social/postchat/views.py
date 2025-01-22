@@ -92,3 +92,8 @@ def profile_view(request):
     if request.user.is_superuser:
         return redirect('admin:index')
     return render(request, 'profile.html')
+
+def home_view(request):
+    if request.user.is_authenticated:
+        return redirect('landing')
+    return render(request, 'homebef.html')

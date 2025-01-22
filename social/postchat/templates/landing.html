@@ -21,52 +21,6 @@
         color: #fff;
     }
 
-    .btn-primary {
-        background: var(--neon-purple);
-        border: none;
-        box-shadow: 0 0 15px var(--neon-purple);
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary:hover {
-        background: var(--glow-purple);
-        transform: scale(1.05);
-    }
-
-    .btn-link {
-        color: var(--glow-purple);
-    }
-
-    .btn-link:hover {
-        color: var(--neon-purple);
-        text-shadow: 0 0 10px var(--neon-purple);
-    }
-
-    textarea.form-control {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid var(--neon-purple);
-        color: #fff;
-    }
-
-    textarea.form-control:focus {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: var(--glow-purple);
-        box-shadow: 0 0 15px var(--neon-purple);
-        color: #fff;
-    }
-
-    .list-group-item {
-        background: transparent;
-        border-color: var(--neon-purple);
-        color: #fff;
-        transition: all 0.3s ease;
-    }
-
-    .list-group-item:hover {
-        background: rgba(176, 38, 255, 0.2);
-        transform: translateX(10px);
-    }
-
     /* Animated gradient text */
     .card-title {
         background: linear-gradient(45deg, #fff, var(--glow-purple), #fff);
@@ -89,56 +43,8 @@
         <div class="col-md-8">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Create Post</h5>
-                    <div class="d-flex">
-                        <img src="https://via.placeholder.com/40" class="rounded-circle me-2" alt="Profile Picture">
-                        <textarea class="form-control" rows="3" placeholder="What's on your mind?"></textarea>
-                    </div>
-                    <div class="mt-3">
-                        <button class="btn btn-primary">Post</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sample Posts -->
-            <div class="card mb-3">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <img src="https://via.placeholder.com/40" class="rounded-circle me-2" alt="Profile Picture">
-                        <div>
-                            <h6 class="mb-0">Sample User</h6>
-                            <small class="text-muted">2 hours ago</small>
-                        </div>
-                    </div>
-                    <p class="card-text">This is a sample post content. Welcome to HiveNet!</p>
-                    <div class="d-flex justify-content-between">
-                        <button class="btn btn-link text-decoration-none"><i class="far fa-heart"></i> Like</button>
-                        <button class="btn btn-link text-decoration-none"><i class="far fa-comment"></i> Comment</button>
-                        <button class="btn btn-link text-decoration-none"><i class="far fa-share-square"></i> Share</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <!-- Trending Communities -->
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Trending Communities</h5>
-                    <div class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <h6 class="mb-1">Tech Enthusiasts</h6>
-                            <small class="text-muted">1.2k members</small>
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <h6 class="mb-1">Photography</h6>
-                            <small class="text-muted">856 members</small>
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <h6 class="mb-1">Gaming Hub</h6>
-                            <small class="text-muted">2.3k members</small>
-                        </a>
-                    </div>
+                    <h5 class="card-title">Welcome!</h5>
+                    <p class="card-text">Hi, your username is {{ user.username }}</p>
                 </div>
             </div>
         </div>
