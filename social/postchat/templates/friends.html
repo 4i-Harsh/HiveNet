@@ -96,7 +96,7 @@
     {% if friends %}
         <div class="friends-list">
             {% for friend in friends %}
-                <div class="friend-card" onclick="confirmChat('{{ friend.username }}', {{ friend.id }})">
+                <div class="friend-card" onclick="confirmChat('{{ friend.username }}', '{{ friend.id }}')">
                     <img src="{{ friend.profile.profile_pic.url }}" class="friend-pic">
                     <h5>{{ friend.username }}</h5>
                     {% if friend.profile.location %}

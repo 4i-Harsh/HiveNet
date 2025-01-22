@@ -1,53 +1,261 @@
 {% extends 'base.html' %}
 
-{% block title %}Chat Room{% endblock %}
+{% block title %}Chat with {{ friend.username|default:"User" }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="chat-container">
-        <h3 class="mb-4">This is chatroom</h3>
-        <div class="participants-box">
-            <h5>Users in chat:</h5>
-            <ul>
-                <li>{{ request.user.username }}</li>
-                <li>{{ friend.username }}</li>
-            </ul>
+<style>
+    .chat-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .chat-box {
+        background: rgba(26, 0, 51, 0.8);
+        border: 1px solid var(--neon-purple);
+        border-radius: 15px;
+        height: 70vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 0 20px var(--neon-purple);
+    }
+
+    .chat-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--neon-purple);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .friend-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--neon-purple);
+        object-fit: cover;
+    }
+
+    .messages-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .message {
+        max-width: 70%;
+        padding: 0.8rem 1rem;
+        border-radius: 15px;
+        position: relative;
+    }
+
+    .message.sent {
+        background: var(--neon-purple);
+        align-self: flex-end;
+        margin-left: auto;
+        border-bottom-right-radius: 5px;
+    }
+
+    .message.received {
+        background: rgba(255, 255, 255, 0.1);
+        align-self: flex-start;
+        margin-right: auto;
+        border-bottom-left-radius: 5px;
+    }
+
+    .message-time {
+        font-size: 0.7rem;
+        opacity: 0.7;
+        margin-top: 0.3rem;
+    }
+
+    .chat-input-container {
+        padding: 1rem;
+        border-top: 1px solid var(--neon-purple);
+        display: flex;
+        gap: 1rem;
+    }
+
+    .chat-input {
+        flex-grow: 1;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--neon-purple);
+        border-radius: 25px;
+        padding: 0.8rem 1.2rem;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .chat-input:focus {
+        outline: none;
+        box-shadow: 0 0 15px var(--neon-purple);
+    }
+
+    .send-btn {
+        background: var(--neon-purple);
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .send-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 15px var(--neon-purple);
+    }
+
+    /* Custom scrollbar */
+    .messages-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .messages-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb {
+        background: var(--neon-purple);
+        border-radius: 4px;
+    }
+</style>
+
+<div class="chat-container" 
+     data-user-id="{{ request.user.id|default:'null' }}"
+     data-friend-id="{{ friend.id|default:'null' }}">
+    <div class="chat-box">
+        <div class="chat-header">
+            {% if friend.profile.profile_pic %}
+                <img src="{{ friend.profile.profile_pic.url }}" alt="{{ friend.username }}" class="friend-pic">
+            {% else %}
+                <img src="/media/profile_pics/default.png" alt="{{ friend.username }}" class="friend-pic">
+            {% endif %}
+            <h5 class="mb-0">{{ friend.username|default:"User" }}</h5>
+        </div>
+        
+        <div class="messages-container" id="messages">
+            {% for message in messages %}
+                <div class="message {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                    {{ message.content|default:"" }}
+                    <div class="message-time">
+                        {{ message.timestamp|date:"g:i A"|default:"" }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chat-message-input" placeholder="Type a message...">
+            <button class="send-btn" id="chat-message-submit">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 </div>
 
-<style>
-    .chat-container {
-        background: rgba(26, 0, 51, 0.8);
-        border: 1px solid var(--neon-purple);
-        border-radius: 15px;
-        padding: 2rem;
-        margin: 2rem auto;
-        max-width: 800px;
-        box-shadow: 0 0 20px var(--neon-purple);
+<script>
+    // Get current user ID safely from data attributes
+    const container = document.querySelector('.chat-container');
+    const currentUserId = parseInt(container.dataset.userId) || null;
+    const friendId = parseInt(container.dataset.friendId) || null;
+    
+    if (!currentUserId || !friendId) {
+        console.error('Missing user IDs');
+        window.location.href = '{% url "friends" %}';
+    }
+    
+    const messagesContainer = document.getElementById('messages');
+    const messageInput = document.getElementById('chat-message-input');
+    const submitButton = document.getElementById('chat-message-submit');
+    
+    // Scroll to bottom of messages
+    function scrollToBottom() {
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    }
+    scrollToBottom();
+
+    // WebSocket setup with error handling
+    const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let chatSocket = null;
+
+    try {
+        chatSocket = new WebSocket(
+            `${wsScheme}//${window.location.host}/ws/chat/${friendId}/`
+        );
+    } catch (error) {
+        console.error('WebSocket connection failed:', error);
     }
 
-    .participants-box {
-        background: rgba(26, 0, 51, 0.6);
-        border: 1px solid var(--neon-purple);
-        border-radius: 10px;
-        padding: 1rem;
-        margin-top: 1rem;
-    }
+    if (chatSocket) {
+        chatSocket.onmessage = function(e) {
+            try {
+                const data = JSON.parse(e.data);
+                const message = data.message;
+                
+                if (message && message.content) {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message');
+                    messageElement.classList.add(Number(message.sender_id) === currentUserId ? 'sent' : 'received');
+                    
+                    // Format the timestamp
+                    const timestamp = message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'}) : '';
+                    
+                    // Set message content with timestamp
+                    messageElement.innerHTML = `
+                        ${message.content}
+                        <div class="message-time">${timestamp}</div>
+                    `;
+                    
+                    messagesContainer.appendChild(messageElement);
+                    scrollToBottom();
+                }
+            } catch (error) {
+                console.error('Error processing message:', error);
+            }
+        };
 
-    .participants-box ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
+        chatSocket.onclose = function(e) {
+            console.warn('Chat socket closed unexpectedly');
+            // Try to reconnect after 1 second
+            setTimeout(function() {
+                window.location.reload();
+            }, 1000);
+        };
 
-    .participants-box li {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid rgba(176, 38, 255, 0.2);
-    }
+        chatSocket.onerror = function(e) {
+            console.error('WebSocket error:', e);
+        };
 
-    .participants-box li:last-child {
-        border-bottom: none;
+        messageInput.focus();
+        messageInput.onkeyup = function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {  // enter key without shift
+                submitButton.click();
+            }
+        };
+
+        submitButton.onclick = function(e) {
+            const messageContent = messageInput.value.trim();
+            if (messageContent && chatSocket.readyState === WebSocket.OPEN) {
+                try {
+                    chatSocket.send(JSON.stringify({
+                        'message': messageContent,
+                        'receiver_id': friendId
+                    }));
+                    messageInput.value = '';
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
+            }
+        };
     }
-</style>
+</script>
 {% endblock %} 

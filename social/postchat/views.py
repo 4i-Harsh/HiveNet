@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Profile, FriendRequest
+from .models import Profile, FriendRequest, ChatMessage
 from django.utils.dateparse import parse_date
 from django.http import JsonResponse
 from django.db.models import Q
@@ -211,9 +211,15 @@ def chatroom_view(request, friend_id):
             status='accepted'
         ).exists():
             return redirect('friends')
-            
+        
+        # Get chat messages
+        messages = ChatMessage.objects.filter(
+            (Q(sender=request.user, receiver=friend) | Q(sender=friend, receiver=request.user))
+        ).order_by('timestamp')
+        
         return render(request, 'chatroom.html', {
-            'friend': friend
+            'friend': friend,
+            'messages': messages
         })
     except User.DoesNotExist:
         return redirect('friends')

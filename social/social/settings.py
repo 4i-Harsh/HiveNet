@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-%b623x(9x437e)_$s32idf_%ndxln5*jcabmm7tl=b2v4+og8x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'postchat',
     'owner',
+    'channels',
+    'channels_redis',
 ]
 
 MIDDLEWARE = [
@@ -138,3 +140,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'login'
+
+# Add Channels configuration
+ASGI_APPLICATION = 'social.asgi.application'
+
+# Channel layers configuration for in-memory layer
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
