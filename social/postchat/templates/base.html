@@ -188,6 +188,44 @@
         .notification-item:last-child {
             border-bottom: none;
         }
+
+        .search-wrapper {
+            position: relative;
+            margin: 0 10px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--neon-purple);
+            background: rgba(26, 0, 51, 0.6);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px var(--neon-purple);
+            background: rgba(26, 0, 51, 0.8);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--neon-purple);
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            color: var(--glow-purple);
+        }
     </style>
 </head>
 <body>
@@ -204,29 +242,30 @@
                         {% endif %}
                     </button>
                     <div class="notifications-dropdown" id="notificationsDropdown">
-                        {% for request in friend_requests %}
-                        <div class="notification-item" data-request-id="{{ request.id }}">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <i class="fas fa-user-plus me-2"></i>
-                                    <span>{{ request.from_user.username }} sent you a friend request</span>
-                                    <small class="text-muted d-block">{{ request.created_at|timesince }} ago</small>
-                                </div>
-                                <div class="btn-group">
-                                    <button onclick="handleFriendRequest({{ request.id }}, 'accept')" class="btn btn-sm btn-success">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button onclick="handleFriendRequest({{ request.id }}, 'reject')" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-times"></i>
-                                    </button>
+                        {% if friend_requests %}
+                            {% for request in friend_requests %}
+                            <div class="notification-item" data-request-id="{{ request.id }}">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <img src="{{ request.from_user.profile.profile_pic.url }}" class="notification-pic me-2">
+                                        <span>{{ request.from_user.username }} sent you a friend request</span>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button onclick="handleFriendRequest({{ request.id }}, 'accept')" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button onclick="handleFriendRequest({{ request.id }}, 'reject')" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        {% empty %}
-                        <div class="notification-item">
-                            <span>No new notifications</span>
-                        </div>
-                        {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="notification-item">
+                                <span>No new notifications</span>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 <!-- Logout Button -->
@@ -249,9 +288,16 @@
             <small class="text-muted">@{{ user.username }}</small>
         </div>
 
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search" class="border-0 bg-transparent">
+        <div class="search-section mb-3">
+            <form method="GET" action="{% url 'search_users' %}" class="search-form">
+                <div class="search-wrapper">
+                    <input type="text" name="q" class="search-input" placeholder="Search users..." 
+                           value="{{ request.GET.q|default:'' }}">
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
         </div>
 
         <nav class="mt-3">
@@ -296,14 +342,15 @@
     });
 
     function handleFriendRequest(requestId, action) {
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formData = new FormData();
+        formData.append('action', action);
         
-        fetch(`/${action}_friend_request/${requestId}/`, {
+        fetch(`/friend-request/handle/${requestId}/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/json'
+                'X-CSRFToken': '{{ csrf_token }}',
             },
+            body: formData,
             credentials: 'same-origin'
         })
         .then(response => response.json())
