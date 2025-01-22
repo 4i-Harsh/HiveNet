@@ -2,8 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Profile
+from .models import Profile, FriendRequest
 from django.utils.dateparse import parse_date
+from django.http import JsonResponse
+from django.db.models import Q
 
 def handle_profile_pic_update(profile, new_pic):
     """Handle profile picture update and cleanup"""
@@ -97,3 +99,88 @@ def home_view(request):
     if request.user.is_authenticated:
         return redirect('landing')
     return render(request, 'homebef.html')
+
+@login_required
+def search_users(request):
+    query = request.GET.get('q', '')
+    if query:
+        users = User.objects.filter(username__icontains=query).exclude(id=request.user.id)
+    else:
+        users = []
+    
+    return render(request, 'search_results.html', {
+        'users': users,
+        'query': query
+    })
+
+@login_required
+def send_friend_request(request, user_id):
+    if request.method == 'POST':
+        to_user = User.objects.get(id=user_id)
+        
+        # Check if request already exists
+        if not FriendRequest.objects.filter(
+            Q(from_user=request.user, to_user=to_user) |
+            Q(from_user=to_user, to_user=request.user)
+        ).exists():
+            FriendRequest.objects.create(
+                from_user=request.user,
+                to_user=to_user
+            )
+            return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'})
+
+@login_required
+def handle_friend_request(request, request_id):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        friend_request = FriendRequest.objects.get(id=request_id)
+        
+        if friend_request.to_user == request.user:
+            if action == 'accept':
+                friend_request.status = 'accepted'
+            elif action == 'reject':
+                friend_request.status = 'rejected'
+            friend_request.save()
+            return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'})
+
+def get_friend_requests(request):
+    """Context processor for friend requests"""
+    try:
+        if request.user.is_authenticated:
+            friend_requests = FriendRequest.objects.filter(
+                to_user=request.user,
+                status='pending'
+            ).select_related('from_user').order_by('-created_at')
+            return {
+                'friend_requests': friend_requests,
+                'has_notifications': friend_requests.exists()
+            }
+    except:
+        pass
+    
+    return {
+        'friend_requests': [],
+        'has_notifications': False
+    }
+
+@login_required
+def friends_view(request):
+    # Get all accepted friend requests where the user is either the sender or receiver
+    accepted_requests = FriendRequest.objects.filter(
+        (Q(from_user=request.user) | Q(to_user=request.user)) &
+        Q(status='accepted')
+    )
+    
+    # Get the friend users from the requests
+    friends = []
+    for fr in accepted_requests:
+        if fr.from_user == request.user:
+            friends.append(fr.to_user)
+        else:
+            friends.append(fr.from_user)
+    
+    return render(request, 'friends.html', {
+        'friends': friends
+    })

@@ -9,4 +9,8 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('profile/setup/', views.profile_setup_view, name='profile_setup'),
     path('profile/', views.profile_view, name='profile'),
+    path('search/', views.search_users, name='search_users'),
+    path('friend-request/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
+    path('friend-request/handle/<int:request_id>/', views.handle_friend_request, name='handle_friend_request'),
+    path('friends/', views.friends_view, name='friends'),
 ] 

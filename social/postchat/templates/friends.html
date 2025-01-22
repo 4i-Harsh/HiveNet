@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Friends{% endblock %}
+
+{% block content %}
+<style>
+    .friends-container {
+        padding: 20px;
+    }
+
+    .friend-card {
+        background: rgba(26, 0, 51, 0.8);
+        border: 1px solid var(--neon-purple);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .friend-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 20px var(--neon-purple);
+    }
+
+    .friend-pic {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 2px solid var(--neon-purple);
+        object-fit: cover;
+    }
+
+    .friend-info {
+        flex: 1;
+    }
+
+    .friend-username {
+        color: var(--glow-purple);
+        text-decoration: none;
+        font-size: 1.2rem;
+    }
+
+    .friend-username:hover {
+        color: var(--neon-purple);
+    }
+
+    .no-friends {
+        text-align: center;
+        padding: 50px;
+        color: #666;
+    }
+</style>
+
+<div class="container friends-container">
+    <h4 class="mb-4">My Friends</h4>
+    
+    {% if friends %}
+        <div class="row">
+            {% for friend in friends %}
+            <div class="col-md-6 mb-4">
+                <div class="friend-card">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ friend.profile.profile_pic.url }}" class="friend-pic me-3">
+                        <div class="friend-info">
+                            <a href="#" class="friend-username mb-1 d-block">{{ friend.username }}</a>
+                            <p class="text-muted mb-2">
+                                {% if friend.profile.location %}
+                                <i class="fas fa-map-marker-alt me-2"></i>{{ friend.profile.location }}
+                                {% endif %}
+                            </p>
+                            <p class="bio-text">{{ friend.profile.bio|truncatechars:100 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-friends">
+            <i class="fas fa-user-friends fa-3x mb-3"></i>
+            <h5>No friends yet</h5>
+            <p>Start connecting with other users to build your network!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 
