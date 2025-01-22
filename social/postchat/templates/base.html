@@ -242,28 +242,34 @@
                         {% endif %}
                     </button>
                     <div class="notifications-dropdown" id="notificationsDropdown">
-                        {% if friend_requests %}
-                            {% for request in friend_requests %}
-                            <div class="notification-item" data-request-id="{{ request.id }}">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <img src="{{ request.from_user.profile.profile_pic.url }}" class="notification-pic me-2">
-                                        <span>{{ request.from_user.username }} sent you a friend request</span>
-                                    </div>
-                                    <div class="btn-group">
-                                        <button onclick="handleFriendRequest({{ request.id }}, 'accept')" class="btn btn-sm btn-success">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button onclick="handleFriendRequest({{ request.id }}, 'reject')" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-times"></i>
-                                        </button>
+                        {% if user.is_authenticated %}
+                            {% if friend_requests %}
+                                {% for request in friend_requests %}
+                                <div class="notification-item" data-request-id="{{ request.id }}">
+                                    <div class="d-flex align-items-center justify-content-between p-2">
+                                        <div>
+                                            <img src="{{ request.from_user.profile.profile_pic.url }}" class="notification-pic me-2" style="width: 40px; height: 40px; border-radius: 50%;">
+                                            <span>{{ request.from_user.username }} sent you a friend request</span>
+                                        </div>
+                                        <div class="btn-group">
+                                            <button onclick="handleFriendRequest({{ request.id }}, 'accept')" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button onclick="handleFriendRequest({{ request.id }}, 'reject')" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            {% endfor %}
+                                {% endfor %}
+                            {% else %}
+                                <div class="notification-item p-3">
+                                    <span>No new notifications</span>
+                                </div>
+                            {% endif %}
                         {% else %}
-                            <div class="notification-item">
-                                <span>No new notifications</span>
+                            <div class="notification-item p-3">
+                                <span>Please log in to see notifications</span>
                             </div>
                         {% endif %}
                     </div>
@@ -326,18 +332,15 @@
     <script>
     function toggleNotifications() {
         const dropdown = document.getElementById('notificationsDropdown');
-        dropdown.classList.toggle('show');
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
     }
 
     // Close notifications when clicking outside
     document.addEventListener('click', function(event) {
-        if (!event.target.matches('.nav-btn') && !event.target.closest('.notifications-dropdown')) {
-            const dropdowns = document.getElementsByClassName('notifications-dropdown');
-            for (let dropdown of dropdowns) {
-                if (dropdown.classList.contains('show')) {
-                    dropdown.classList.remove('show');
-                }
-            }
+        const dropdown = document.getElementById('notificationsDropdown');
+        const notificationBtn = event.target.closest('.nav-btn');
+        if (!notificationBtn && !dropdown.contains(event.target)) {
+            dropdown.style.display = 'none';
         }
     });
 
@@ -371,7 +374,7 @@
 
     function updateNotificationCount() {
         const badge = document.querySelector('.notification-badge');
-        const count = document.querySelectorAll('.notification-item').length - 1; // Subtract 1 for the "No notifications" item
+        const count = document.querySelectorAll('.notification-item').length - 1;
         if (count <= 0) {
             badge.style.display = 'none';
             document.getElementById('notificationsDropdown').innerHTML = 

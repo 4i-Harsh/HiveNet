@@ -145,13 +145,22 @@ def handle_friend_request(request, request_id):
             return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'})
 
-@login_required
 def get_friend_requests(request):
     """Context processor for friend requests"""
-    if request.user.is_authenticated:
-        friend_requests = FriendRequest.objects.filter(
-            to_user=request.user,
-            status='pending'
-        ).select_related('from_user').order_by('-created_at')
-        return {'friend_requests': friend_requests}
-    return {'friend_requests': []}
+    try:
+        if request.user.is_authenticated:
+            friend_requests = FriendRequest.objects.filter(
+                to_user=request.user,
+                status='pending'
+            ).select_related('from_user').order_by('-created_at')
+            return {
+                'friend_requests': friend_requests,
+                'has_notifications': friend_requests.exists()
+            }
+    except:
+        pass
+    
+    return {
+        'friend_requests': [],
+        'has_notifications': False
+    }
