@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Profile, FriendRequest, ChatMessage
+from .models import Profile, FriendRequest, ChatMessage, Post, Comment
 from django.utils.dateparse import parse_date
 from django.http import JsonResponse
 from django.db.models import Q
@@ -63,10 +63,23 @@ def profile_setup_view(request):
 
 @login_required
 def landing_view(request):
-    # Redirect superusers to admin panel
     if request.user.is_superuser:
         return redirect('admin:index')
-    return render(request, 'landing.html')
+    
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        image = request.FILES.get('image')
+        
+        if content:
+            post = Post.objects.create(
+                user=request.user,
+                content=content,
+                image=image
+            )
+            return redirect('landing')
+    
+    posts = Post.objects.select_related('user', 'user__profile').prefetch_related('likes').all()
+    return render(request, 'landing.html', {'posts': posts})
 
 def login_view(request):
     if request.method == 'POST':
@@ -223,3 +236,42 @@ def chatroom_view(request, friend_id):
         })
     except User.DoesNotExist:
         return redirect('friends')
+
+@login_required
+def like_post(request, post_id):
+    if request.method == 'POST':
+        post = Post.objects.get(id=post_id)
+        if request.user in post.likes.all():
+            post.likes.remove(request.user)
+            liked = False
+        else:
+            post.likes.add(request.user)
+            liked = True
+        return JsonResponse({
+            'status': 'success',
+            'liked': liked,
+            'likes_count': post.likes_count()
+        })
+    return JsonResponse({'status': 'error'})
+
+@login_required
+def add_comment(request, post_id):
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            post = Post.objects.get(id=post_id)
+            comment = Comment.objects.create(
+                post=post,
+                user=request.user,
+                content=content
+            )
+            return JsonResponse({
+                'status': 'success',
+                'comment': {
+                    'content': comment.content,
+                    'username': comment.user.username,
+                    'created_at': comment.created_at.strftime('%b %d, %Y %I:%M %p'),
+                    'user_pic': comment.user.profile.profile_pic.url
+                }
+            })
+    return JsonResponse({'status': 'error'})

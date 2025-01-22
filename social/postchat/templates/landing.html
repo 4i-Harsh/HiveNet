@@ -36,6 +36,133 @@
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
     }
+
+    .post-form-card {
+        background: rgba(26, 0, 51, 0.8);
+        border: 1px solid var(--neon-purple);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 0 20px var(--neon-purple);
+    }
+
+    .post-card {
+        background: rgba(26, 0, 51, 0.8);
+        border: 1px solid var(--neon-purple);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 0 20px var(--neon-purple);
+        transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 30px var(--neon-purple);
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .post-user-pic {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid var(--neon-purple);
+        object-fit: cover;
+    }
+
+    .post-content {
+        margin-bottom: 15px;
+    }
+
+    .post-image {
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        border: 1px solid var(--neon-purple);
+    }
+
+    .post-caption {
+        color: #e0e0e0;
+        font-size: 1.1rem;
+        margin: 15px 0;
+        padding: 10px;
+        border-left: 3px solid var(--neon-purple);
+        background: rgba(176, 38, 255, 0.1);
+        border-radius: 0 10px 10px 0;
+    }
+
+    .post-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(176, 38, 255, 0.3);
+    }
+
+    .like-btn {
+        background: none;
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .like-btn:hover {
+        color: var(--neon-purple);
+        transform: scale(1.1);
+    }
+
+    .like-btn.liked {
+        color: var(--neon-purple);
+    }
+
+    .post-timestamp {
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .comment-user-pic {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .comment-content {
+        background: rgba(26, 0, 51, 0.4);
+        border-radius: 10px;
+        padding: 8px 12px;
+        flex-grow: 1;
+    }
+
+    .comment-username {
+        font-weight: 600;
+        color: var(--neon-purple);
+    }
+
+    .comment-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--neon-purple);
+        color: white;
+    }
+
+    .comment-input:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--glow-purple);
+        color: white;
+        box-shadow: 0 0 10px var(--neon-purple);
+    }
 </style>
 
 <div class="container">
@@ -49,5 +176,143 @@
             </div>
         </div>
     </div>
+
+    <!-- Create Post Form -->
+    <div class="post-form-card mb-4">
+        <h4 class="mb-3">Create a Post</h4>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind?"></textarea>
+            </div>
+            <div class="mb-3">
+                <input type="file" class="form-control" name="image" accept="image/*">
+            </div>
+            <button type="submit" class="btn btn-primary">Post</button>
+        </form>
+    </div>
+
+    <!-- Posts Feed -->
+    {% for post in posts %}
+        <div class="post-card">
+            <div class="post-header">
+                <img src="{{ post.user.profile.profile_pic.url }}" alt="{{ post.user.username }}" class="post-user-pic">
+                <div>
+                    <h5 class="mb-0">{{ post.user.username }}</h5>
+                    <small class="post-timestamp">{{ post.created_at|timesince }} ago</small>
+                </div>
+            </div>
+
+            {% if post.image %}
+                <img src="{{ post.image.url }}" alt="Post image" class="post-image">
+            {% endif %}
+
+            <div class="post-caption">
+                {{ post.content }}
+            </div>
+
+            <div class="post-actions">
+                <button class="like-btn {% if request.user in post.likes.all %}liked{% endif %}" 
+                        onclick="likePost({{ post.id }}, this)">
+                    <i class="fas fa-heart"></i>
+                    <span class="likes-count">{{ post.likes.count }}</span>
+                </button>
+                <button class="like-btn" onclick="toggleComments({{ post.id }})">
+                    <i class="fas fa-comment"></i>
+                    <span class="comments-count">{{ post.comments.count }}</span>
+                </button>
+            </div>
+
+            <div class="post-comments mt-3">
+                <hr class="border-purple">
+                <h6 class="mb-3">Comments</h6>
+                <div class="comments-list" id="comments-{{ post.id }}">
+                    {% for comment in post.comments.all %}
+                        <div class="comment-item mb-2">
+                            <div class="d-flex align-items-start gap-2">
+                                <img src="{{ comment.user.profile.profile_pic.url }}" alt="{{ comment.user.username }}" class="comment-user-pic">
+                                <div class="comment-content">
+                                    <div class="comment-header">
+                                        <span class="comment-username">{{ comment.user.username }}</span>
+                                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                    </div>
+                                    <p class="mb-0">{{ comment.content }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="comment-form mt-3">
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control comment-input" placeholder="Add a comment..." data-post-id="{{ post.id }}">
+                        <button class="btn btn-sm btn-primary comment-submit" data-post-id="{{ post.id }}">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
 </div>
+
+<script>
+function likePost(postId, button) {
+    fetch(`/like-post/${postId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            button.classList.toggle('liked', data.liked);
+            button.querySelector('.likes-count').textContent = data.likes_count;
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+document.querySelectorAll('.comment-submit').forEach(button => {
+    button.addEventListener('click', function() {
+        const postId = this.dataset.postId;
+        const input = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
+        const content = input.value.trim();
+        
+        if (content) {
+            fetch(`/add-comment/${postId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `content=${encodeURIComponent(content)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const commentsList = document.querySelector(`#comments-${postId}`);
+                    const commentHtml = `
+                        <div class="comment-item mb-2">
+                            <div class="d-flex align-items-start gap-2">
+                                <img src="${data.comment.user_pic}" alt="${data.comment.username}" class="comment-user-pic">
+                                <div class="comment-content">
+                                    <div class="comment-header">
+                                        <span class="comment-username">${data.comment.username}</span>
+                                        <small class="text-muted">just now</small>
+                                    </div>
+                                    <p class="mb-0">${data.comment.content}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    commentsList.insertAdjacentHTML('beforeend', commentHtml);
+                    input.value = '';
+                }
+            });
+        }
+    });
+});
+</script>
 {% endblock %} 
