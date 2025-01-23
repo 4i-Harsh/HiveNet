@@ -7,6 +7,13 @@ from django.utils.dateparse import parse_date
 from django.http import JsonResponse
 from django.db.models import Q
 from .utils import send_friend_request_email
+from google.generativeai import GenerativeModel
+import google.generativeai as genai
+import os
+
+# Configure Gemini API
+genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+model = GenerativeModel('gemini-pro')
 
 def handle_profile_pic_update(profile, new_pic):
     """Handle profile picture update and cleanup"""
@@ -282,3 +289,30 @@ def add_comment(request, post_id):
                 }
             })
     return JsonResponse({'status': 'error'})
+
+@login_required
+def hivebot_chat(request):
+    if request.method == 'POST':
+        try:
+            user_message = request.POST.get('message', '')
+            
+            # Add system prompt to guide the bot's behavior
+            system_prompt = """You are HiveBot, a helpful AI assistant for HiveNet social media platform. 
+            Your main role is to help users format and improve their text content. 
+            Keep responses concise and friendly."""
+            
+            # Generate response using Gemini
+            response = model.generate_content(f"{system_prompt}\nUser: {user_message}")
+            
+            return JsonResponse({
+                'status': 'success',
+                'response': response.text
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            })
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})

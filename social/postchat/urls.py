@@ -16,4 +16,5 @@ urlpatterns = [
     path('chat/<int:friend_id>/', views.chatroom_view, name='chatroom'),
     path('like-post/<int:post_id>/', views.like_post, name='like_post'),
     path('add-comment/<int:post_id>/', views.add_comment, name='add_comment'),
+    path('hivebot/chat/', views.hivebot_chat, name='hivebot_chat'),
 ] 

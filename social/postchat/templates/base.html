@@ -226,6 +226,114 @@
         .search-btn:hover {
             color: var(--glow-purple);
         }
+
+        .hivebot-container {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background: rgba(26, 0, 51, 0.95);
+            border: 2px solid var(--neon-purple);
+            border-radius: 15px;
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: 0 0 20px var(--neon-purple);
+            backdrop-filter: blur(10px);
+        }
+
+        .hivebot-header {
+            padding: 15px;
+            background: rgba(176, 38, 255, 0.2);
+            border-bottom: 1px solid var(--neon-purple);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 13px 13px 0 0;
+        }
+
+        .hivebot-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bot-message, .user-message {
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .bot-message {
+            background: rgba(176, 38, 255, 0.1);
+            align-self: flex-start;
+            border: 1px solid var(--neon-purple);
+        }
+
+        .user-message {
+            background: rgba(255, 255, 255, 0.1);
+            align-self: flex-end;
+            border: 1px solid var(--glow-purple);
+        }
+
+        .hivebot-input {
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid var(--neon-purple);
+        }
+
+        .hivebot-input input {
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--neon-purple);
+            border-radius: 20px;
+            padding: 8px 15px;
+            color: white;
+        }
+
+        .hivebot-input button {
+            background: var(--neon-purple);
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .hivebot-input button:hover {
+            background: var(--glow-purple);
+            transform: scale(1.1);
+        }
+
+        .hivebot-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--neon-purple);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 0 15px var(--neon-purple);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .hivebot-toggle:hover {
+            transform: scale(1.1);
+            background: var(--glow-purple);
+        }
     </style>
 </head>
 <body>
@@ -331,6 +439,27 @@
         {% endblock %}
     </div>
 
+    <!-- Add this before closing body tag -->
+    <div class="hivebot-container" id="hivebotContainer">
+        <div class="hivebot-header">
+            <span><i class="fas fa-robot me-2"></i>HiveBot</span>
+            <button class="btn btn-close btn-close-white" onclick="toggleHiveBot()"></button>
+        </div>
+        <div class="hivebot-messages" id="hivebotMessages">
+            <div class="bot-message">
+                Hi! I'm HiveBot 🤖 I can help you format your posts and messages. How can I assist you today?
+            </div>
+        </div>
+        <div class="hivebot-input">
+            <input type="text" id="hivebotInput" placeholder="Ask HiveBot...">
+            <button onclick="sendToHiveBot()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    
+    <button class="hivebot-toggle" onclick="toggleHiveBot()">
+        <i class="fas fa-robot"></i>
+    </button>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     function toggleNotifications() {
@@ -387,6 +516,70 @@
             badge.style.display = 'flex';
         }
     }
+
+    function toggleHiveBot() {
+        const container = document.getElementById('hivebotContainer');
+        container.style.display = container.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function sendToHiveBot() {
+        const input = document.getElementById('hivebotInput');
+        const messages = document.getElementById('hivebotMessages');
+        const userMessage = input.value.trim();
+
+        if (!userMessage) return;
+
+        // Add user message
+        messages.innerHTML += `
+            <div class="user-message">${userMessage}</div>
+        `;
+
+        // Clear input
+        input.value = '';
+
+        // Show loading
+        messages.innerHTML += `
+            <div class="bot-message" id="loadingMessage">
+                <i class="fas fa-spinner fa-spin"></i> Thinking...
+            </div>
+        `;
+        messages.scrollTop = messages.scrollHeight;
+
+        // Send to backend
+        fetch('/hivebot/chat/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `message=${encodeURIComponent(userMessage)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove loading message
+            document.getElementById('loadingMessage').remove();
+            
+            // Add bot response
+            messages.innerHTML += `
+                <div class="bot-message">${data.response}</div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
+        })
+        .catch(error => {
+            document.getElementById('loadingMessage').remove();
+            messages.innerHTML += `
+                <div class="bot-message">Sorry, I encountered an error. Please try again.</div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
+        });
+    }
+
+    // Allow Enter key to send message
+    document.getElementById('hivebotInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendToHiveBot();
+        }
+    });
     </script>
 </body>
 </html> 
