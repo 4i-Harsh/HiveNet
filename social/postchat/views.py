@@ -6,6 +6,7 @@ from .models import Profile, FriendRequest, ChatMessage, Post, Comment
 from django.utils.dateparse import parse_date
 from django.http import JsonResponse
 from django.db.models import Q
+from .utils import send_friend_request_email
 
 def handle_profile_pic_update(profile, new_pic):
     """Handle profile picture update and cleanup"""
@@ -44,6 +45,7 @@ def profile_setup_view(request):
             handle_profile_pic_update(profile, new_pic)
             profile.profile_pic = new_pic
         
+        profile.email = request.POST.get('email', '')
         profile.bio = request.POST.get('bio', '')
         profile.location = request.POST.get('location', '')
         profile.gender = request.POST.get('gender', 'N')
@@ -136,10 +138,15 @@ def send_friend_request(request, user_id):
             Q(from_user=request.user, to_user=to_user) |
             Q(from_user=to_user, to_user=request.user)
         ).exists():
+            # Create friend request
             FriendRequest.objects.create(
                 from_user=request.user,
                 to_user=to_user
             )
+            
+            # Send email notification
+            send_friend_request_email(request.user, to_user)
+                    
             return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'})
 
